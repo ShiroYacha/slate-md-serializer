@@ -59,7 +59,8 @@ var block = {
   list: /^( *)(bull) [\s\S]+?(?:hr|def|\n(?! )(?!\1bull )\n|\s*$)/,
   def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? *(?:\n|$)/,
   paragraph: /^((?:[^\n]+(?!hr|heading|lheading|blockquote|def))+)(?:\n|$)/,
-  text: /^[^\n]+/
+  text: /^[^\n]+/,
+  richcontrol: /^!!\|([^\n]+)\|/,
 };
 
 block.bullet = /(?:[*+-]|\d+\.|\[[x\s]\])/;
@@ -195,6 +196,15 @@ Lexer.prototype.token = function(src, top, bq) {
           });
         }
       }
+    }
+
+    // rich control
+    if ((cap = this.rules.code.exec(src))) {
+      this.tokens.push({
+        type: "richcontrol",
+        data: JSON.parse(cap[0])
+      });
+      continue;
     }
 
     // code
@@ -755,6 +765,15 @@ Renderer.prototype.code = function(childNode, lang) {
   };
 };
 
+Renderer.prototype.richcontrol = function(data) {
+  return {
+    object: "block",
+    type: "richcontrol",
+    data: data,
+    isVoid: true
+  };
+};
+
 Renderer.prototype.blockquote = function(childNode) {
   return {
     object: "block",
@@ -1036,6 +1055,11 @@ Parser.prototype.tok = function() {
       return this.renderer.heading(
         this.inline.parse(this.token.text),
         this.token.depth
+      );
+    }
+    case "richcontrol": {
+      return this.renderer.richcontrol(
+        this.token.data
       );
     }
     case "code": {
