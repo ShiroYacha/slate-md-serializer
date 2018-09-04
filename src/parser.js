@@ -199,7 +199,7 @@ Lexer.prototype.token = function(src, top, bq) {
     }
 
     // rich control
-    if ((cap = this.rules.code.exec(src))) {
+    if ((cap = this.rules.richcontrol.exec(src))) {
       this.tokens.push({
         type: "richcontrol",
         data: JSON.parse(cap[0])
