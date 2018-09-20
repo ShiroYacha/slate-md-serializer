@@ -63,7 +63,7 @@ const RULES = [
         case "paragraph":
           return children;
         case "richcontrol":
-          return `!!|${JSON.stringify(obj.data).replace(/ /g,'')}|`
+          return `!!|${JSON.stringify(obj.data)}|`
         case "code":
           return `\`\`\`\n${children}\n\`\`\``;
         case "code-line":
