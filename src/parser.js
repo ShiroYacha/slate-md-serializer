@@ -60,7 +60,7 @@ var block = {
   def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? *(?:\n|$)/,
   paragraph: /^((?:[^\n]+(?!hr|heading|lheading|blockquote|def))+)(?:\n|$)/,
   text: /^[^\n]+/,
-  richcontrol: /^!!\|([^\n]+)\|/,
+  richcontrol: /^!!\|([^\n]+)\|(?:\n|$)/
 };
 
 block.bullet = /(?:[*+-]|\d+\.|\[[x\s]\])/;
