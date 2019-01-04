@@ -2,6 +2,7 @@ import parser from "./parser";
 import { Value } from "slate";
 import { Record } from "immutable";
 import { encode } from "./urls";
+import { escapeMarkdownChars } from "./utils";
 
 const String = new Record({
   object: "string",
@@ -64,8 +65,10 @@ const RULES = [
           return children;
         case "richcontrol":
           return `!!|${JSON.stringify(obj.data)}|`;
-        case "code":
-          return `\`\`\`\n${children}\n\`\`\``;
+        case "code": {
+          const language = obj.getIn(["data", "language"]) || "";
+          return `\`\`\`${language}\n${children}\n\`\`\``;
+        }
         case "code-line":
           return `${children}\n`;
         case "block-quote":
@@ -117,15 +120,18 @@ const RULES = [
   },
   {
     serialize(obj, children) {
-      if (obj.object !== "inline") return;
-      switch (obj.type) {
-        case "link":
-          const href = encode(obj.getIn(["data", "href"]) || "");
-          return href ? `[${children.trim()}](${href})` : children.trim();
+      if (obj.type === "hashtag") return children;
+    }
+  },
+  {
+    serialize(obj, children) {
+      if (obj.type === "link") {
+        const href = encode(obj.getIn(["data", "href"]) || "");
+        const text = children.trim() || href;
+        return href ? `[${text}](${href})` : text;
       }
     }
   },
-  // Add a new rule that handles marks...
   {
     serialize(obj, children) {
       if (obj.object !== "mark") return;
@@ -142,6 +148,8 @@ const RULES = [
           return `++${children}++`;
         case "deleted":
           return `~~${children}~~`;
+        case "underlined":
+          return `__${children}__`;
       }
     }
   }
@@ -158,7 +166,7 @@ class Markdown {
    * Create a new serializer with `rules`.
    *
    * @param {Object} options
-   *   @property {Array} rules
+   * @property {Array} rules
    * @return {Markdown} serializer
    */
 
@@ -234,7 +242,7 @@ class Markdown {
     let leavesText = leaves.text;
     if (escape) {
       // escape markdown characters
-      leavesText = leavesText.replace(/([\\`*{}\[\]()#+\-.!_>])/gi, "\\$1");
+      leavesText = escapeMarkdownChars(leavesText);
     }
     const string = new String({ text: leavesText });
     const text = this.serializeString(string);
